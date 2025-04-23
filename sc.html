@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cricket Scorecard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f3f4f6;
+      padding: 30px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background: #111827;
+      color: white;
+    }
+
+    select {
+      padding: 5px;
+      width: 60px;
+      font-weight: bold;
+    }
+
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .total-box {
+      background: #fff;
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .total-score {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .wickets {
+      margin-top: 5px;
+      font-size: 16px;
+    }
+
+    .btn {
+      background: #2563eb;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background: #1d4ed8;
+    }
+
+    .btn.red {
+      background: #dc2626;
+    }
+
+    .btn.red:hover {
+      background: #b91c1c;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Cricket Scorecard (8 Over Match)</h2>
+
+<table id="scoreTable">
+  <thead>
+    <tr>
+      <th>Over</th>
+      <th colspan="12">Balls</th>
+      <th>Total</th>
+    </tr>
+  </thead>
+  <tbody id="scoreBody"></tbody>
+</table>
+
+<div class="controls">
+  <div class="btn-group">
+    <button class="btn" onclick="resetInputs()">Reset</button>
+    <button class="btn" onclick="newInnings()">New Innings</button>
+  </div>
+
+  <div class="total-box">
+    <div class="total-score">Total Score: <span id="totalScore">0</span></div>
+    <div class="wickets">
+      Wickets: 
+      <button class="btn" style="padding: 3px 8px;" onclick="updateWickets(-1)">-</button>
+      <span id="wicketsCount">0</span>
+      <button class="btn" style="padding: 3px 8px;" onclick="updateWickets(1)">+</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const options = ['0','1','2','3','4','6','Wd','Nb'];
+  const overs = 8;
+  const scoreBody = document.getElementById('scoreBody');
+  const totalScoreEl = document.getElementById('totalScore');
+  const wicketsCountEl = document.getElementById('wicketsCount');
+  let wickets = 0;
+
+  function createDropdown() {
+    const select = document.createElement('select');
+    for (let opt of options) {
+      const o = document.createElement('option');
+      o.value = opt;
+      o.text = opt;
+      select.appendChild(o);
+    }
+    select.addEventListener('change', updateScore);
+    return select;
+  }
+
+  function buildTable() {
+    scoreBody.innerHTML = '';
+    for (let i = 1; i <= overs; i++) {
+      const row = document.createElement('tr');
+      const overCell = document.createElement('td');
+      overCell.textContent = i;
+      row.appendChild(overCell);
+
+      for (let j = 0; j < 12; j++) {
+        const cell = document.createElement('td');
+        cell.appendChild(createDropdown());
+        row.appendChild(cell);
+      }
+
+      const totalCell = document.createElement('td');
+      totalCell.textContent = '0';
+      row.appendChild(totalCell);
+
+      scoreBody.appendChild(row);
+    }
+  }
+
+  function updateScore() {
+    let totalMatchScore = 0;
+
+    for (let row of scoreBody.children) {
+      let legalBalls = 0;
+      let overScore = 0;
+
+      for (let i = 1; i <= 12; i++) {
+        const sel = row.children[i]?.querySelector('select');
+        if (!sel) continue;
+        const val = sel.value;
+
+        if (val === 'Wd' || val === 'Nb') {
+          overScore += 1;
+        } else {
+          if (legalBalls < 6) {
+            overScore += parseInt(val);
+            legalBalls++;
+          }
+        }
+      }
+
+      row.lastElementChild.textContent = overScore;
+      totalMatchScore += overScore;
+    }
+
+    totalScoreEl.textContent = totalMatchScore;
+  }
+
+  function resetInputs() {
+    document.querySelectorAll('select').forEach(sel => sel.value = '0');
+    updateScore();
+  }
+
+  function newInnings() {
+    resetInputs();
+    updateWickets('reset');
+  }
+
+  function updateWickets(change) {
+    if (change === 'reset') {
+      wickets = 0;
+    } else {
+      wickets += change;
+      if (wickets < 0) wickets = 0;
+    }
+    wicketsCountEl.textContent = wickets;
+  }
+
+  buildTable();
+</script>
+
+</body>
+</html>
